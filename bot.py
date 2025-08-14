@@ -80,13 +80,6 @@ async def on_ready():
     print(f'{bot.user} is now online!')
     print(f'Loaded in {len(bot.guilds)} servers')
     
-    # Sync slash commands
-    try:
-        synced = await bot.tree.sync()
-        print(f'Synced {len(synced)} slash commands')
-    except Exception as e:
-        print(f'Failed to sync commands: {e}')
-    
     # Start background tasks
     bot.loop.create_task(temp_role_handler())
 
@@ -526,21 +519,24 @@ async def roleinfo(ctx, *, role: discord.Role):
     embed.add_field(name="Hoisted", value=role.hoist, inline=True)
     await ctx.send(embed=embed)
 
-# SLASH COMMANDS
-@bot.tree.command(name="warn", description="Warn a member")
-async def slash_warn(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
-    """Slash command version of warn"""
-    if not interaction.user.guild_permissions.kick_members:
-        await interaction.response.send_message("❌ You don't have permission to warn members.", ephemeral=True)
+# Slash commands removed for now - use regular ?warn command
+
+@bot.command()
+async def help(ctx, command_name: str = None):
+    """Show help for commands"""
+    if command_name:
+        # Show help for specific command
+        cmd = bot.get_command(command_name)
+        if not cmd:
+            await ctx.send(f"❌ Command '{command_name}' not found.")
+            return
+        
+        embed = discord.Embed(title=f"Help: {cmd.name}", description=cmd.help or "No description", color=0x3498db)
+        embed.add_field(name="Usage", value=f"`?{cmd.name} {cmd.signature}`", inline=False)
+        await ctx.send(embed=embed)
         return
     
-    if member.id not in warnings:
-        warnings[member.id] = []
+    # Show all commands
+    embed = discord.Embed(title="Bot Commands", description="Use `?help <command>` for detailed info", color=0x3498db)
     
-    warning = {
-        'reason': reason,
-        'mod_id': interaction.user.id,
-        'timestamp': datetime.now().isoformat()
-    }
-    
-    warnings[member.id
+    moderation_cmds = "kick, ban, mute, unmute, unban, warn, warnings, mods
