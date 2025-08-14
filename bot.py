@@ -80,6 +80,13 @@ async def on_ready():
     print(f'{bot.user} is now online!')
     print(f'Loaded in {len(bot.guilds)} servers')
     
+    # Sync slash commands
+    try:
+        synced = await bot.tree.sync()
+        print(f'Synced {len(synced)} slash commands')
+    except Exception as e:
+        print(f'Failed to sync commands: {e}')
+    
     # Start background tasks
     bot.loop.create_task(temp_role_handler())
 
@@ -520,11 +527,11 @@ async def roleinfo(ctx, *, role: discord.Role):
     await ctx.send(embed=embed)
 
 # SLASH COMMANDS
-@bot.slash_command(name="warn", description="Warn a member")
-async def slash_warn(ctx, member: discord.Member, reason: str = "No reason provided"):
+@bot.tree.command(name="warn", description="Warn a member")
+async def slash_warn(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
     """Slash command version of warn"""
-    if not ctx.author.guild_permissions.kick_members:
-        await ctx.respond("❌ You don't have permission to warn members.", ephemeral=True)
+    if not interaction.user.guild_permissions.kick_members:
+        await interaction.response.send_message("❌ You don't have permission to warn members.", ephemeral=True)
         return
     
     if member.id not in warnings:
@@ -532,13 +539,8 @@ async def slash_warn(ctx, member: discord.Member, reason: str = "No reason provi
     
     warning = {
         'reason': reason,
-        'mod_id': ctx.author.id,
+        'mod_id': interaction.user.id,
         'timestamp': datetime.now().isoformat()
     }
     
-    warnings[member.id].append(warning)
-    
-    embed = discord.Embed(title="Member Warned", color=0xffa500)
-    embed.add_field(name="User", value=f"{member} ({member.id})", inline=False)
-    embed.add_field(name="Warning Count", value=len(warnings[member.id]), inline=True)
-    embed.add_
+    warnings[member.id
